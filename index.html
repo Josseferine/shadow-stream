@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Sombra del Stream</title>
+
+    <!-- favicon = logo -->
+    <link rel="icon" type="image/png" href="imgs/logo.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg:         #0a0a0b;
+            --bg-card:    #18181c;
+            --bg-card-hv: #202028;
+            --red:        #e8272e;
+            --red-dim:    #7a1217;
+            --gold:       #f0a500;
+            --white:      #f2f2f4;
+            --grey:       #7a7a88;
+            --ease:       cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--red-dim); border-radius: 2px; }
+
+        /* diagonal manga speed-lines */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(
+                -65deg,
+                transparent 0px, transparent 38px,
+                rgba(232,39,46,0.02) 38px, rgba(232,39,46,0.02) 40px
+            );
+            pointer-events: none; z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; min-height: 100vh; }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 20px;
+            background: rgba(10,10,11,0.95);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky; top: 0; z-index: 200;
+        }
+
+        /* SHADOW-STREAM wordmark */
+        .nav-brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.35rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: baseline;
+            gap: 0;
+            user-select: none;
+        }
+
+        .nav-brand .shadow { color: var(--white); }
+        .nav-brand .dash   { color: var(--red); margin: 0 1px; }
+        .nav-brand .stream { color: var(--red); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.76rem;
+            color: var(--grey);
+            font-weight: 500;
+        }
+
+        .nav-season {
+            padding: 4px 10px;
+            border: 1px solid rgba(232,39,46,0.35);
+            border-radius: 4px;
+            color: var(--red);
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ══════════════════════════════════
+           HERO
+        ══════════════════════════════════ */
+        .hero {
+            padding: 22px 20px 0;
+            animation: rise 0.65s var(--ease) both;
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* row: [poster square] [title] */
+        .hero-title-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        /* poster square — logo cover */
+        .hero-poster {
+            flex-shrink: 0;
+            width: 52px; height: 52px;
+            border-radius: 7px;
+            border: 2px solid rgba(232,39,46,0.35);
+            background: #111;
+            box-shadow: 0 0 20px rgba(232,39,46,0.14), 0 8px 24px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+
+        .hero-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-text { flex: 1; min-width: 0; }
+
+        .hero-tags {
+            display: flex; gap: 6px;
+            margin-bottom: 9px; flex-wrap: wrap;
+        }
+
+        .htag {
+            font-size: 0.64rem; letter-spacing: 1.4px; text-transform: uppercase;
+            font-weight: 700; padding: 3px 8px; border-radius: 3px;
+        }
+        .htag-red  { color: var(--red);  background: rgba(232,39,46,0.1);   border: 1px solid rgba(232,39,46,0.3); }
+        .htag-gold { color: var(--gold); background: rgba(240,165,0,0.08);  border: 1px solid rgba(240,165,0,0.28); }
+        .htag-grey { color: var(--grey); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            letter-spacing: 2.5px; line-height: 0.95;
+            background: linear-gradient(105deg, var(--white) 55%, var(--red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 0.84rem; color: var(--grey);
+            line-height: 1.65; max-width: 620px;
+            margin-bottom: 11px;
+        }
+
+        .hero-meta {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 0.76rem; color: var(--grey); flex-wrap: wrap;
+        }
+        .hero-meta .yr  { color: var(--white); font-weight: 700; }
+        .hero-rating    { display: flex; align-items: center; gap: 5px; color: var(--gold); font-weight: 700; }
+
+        /* ══════════════════════════════════
+           LAYOUT GRID
+        ══════════════════════════════════ */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            padding: 20px 20px 60px;
+            animation: rise 0.85s var(--ease) 0.12s both;
+        }
+
+        /* ══════════════════════════════════
+           VIDEO PLAYER
+        ══════════════════════════════════ */
+        .player-label {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.67rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--red); font-weight: 700;
+        }
+        .player-label::after { content: ''; flex: 1; height: 1px; background: rgba(232,39,46,0.18); }
+
+        .video-shell {
+            position: relative;
+            width: 100%; aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 10px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: 0 4px 50px rgba(0,0,0,0.9);
+        }
+
+        /* red+gold top bar */
+        .video-shell::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--red) 35%, var(--gold) 65%, transparent);
+            z-index: 10; pointer-events: none; opacity: 0.65;
+        }
+
+        video {
+            width: 100%; height: 100%;
+            display: block;
+            object-fit: contain;
+            background: #000;
+            cursor: pointer;
+        }
+
+        /* controls overlay */
+        .ctrl-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 50px 14px 12px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.94) 70%);
+            display: flex; flex-direction: column; gap: 8px;
+            opacity: 1;
+            transition: opacity 0.42s ease;
+            pointer-events: auto;
+        }
+
+        .ctrl-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        /* hide mouse cursor when controls are hidden */
+        .video-shell.cursor-hidden,
+        .video-shell.cursor-hidden video { cursor: none; }
+
+        /* progress */
+        .prog-track {
+            width: 100%; height: 4px;
+            background: transparent;
+            border-radius: 2px; cursor: pointer;
+            position: relative; transition: height 0.15s;
+            /* bigger touch area without showing a gray box */
+            padding: 8px 0;
+            margin: -8px 0;
+            box-sizing: content-box;
+        }
+
+        .prog-track:hover .prog-inner { height: 6px; }
+
+        .prog-inner {
+            height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.15);
+            position: relative;
+        }
+
+        .prog-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--red), var(--gold));
+            border-radius: 2px; width: 0%;
+            box-shadow: 0 0 6px rgba(232,39,46,0.5);
+            position: relative;
+        }
+
+        .prog-thumb {
+            position: absolute; right: -5px; top: 50%;
+            transform: translateY(-50%) scale(0);
+            width: 12px; height: 12px;
+            background: #fff; border-radius: 50%;
+            transition: transform 0.15s;
+        }
+
+        .prog-track:hover .prog-thumb,
+        .prog-track:active .prog-thumb { transform: translateY(-50%) scale(1); }
+
+        /* ctrl row */
+        .ctrl-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ctrl-l, .ctrl-r { display: flex; align-items: center; gap: 10px; }
+
+        .cbtn {
+            background: none; border: none;
+            color: rgba(255,255,255,0.85);
+            font-size: 1.05rem; cursor: pointer;
+            transition: color 0.16s, transform 0.16s;
+            display: flex; align-items: center;
+            /* bigger tap targets on mobile */
+            padding: 6px;
+            touch-action: manipulation;
+        }
+
+        .cbtn-play { font-size: 1.35rem; }
+        .cbtn:hover, .cbtn:active { color: var(--red); transform: scale(1.12); }
+
+        .time-txt {
+            font-size: 0.72rem; color: rgba(255,255,255,0.65);
+            user-select: none; white-space: nowrap;
+        }
+
+        .vol-group { display: flex; align-items: center; gap: 6px; }
+
+        .vol-range {
+            -webkit-appearance: none;
+            width: 60px; height: 3px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px; outline: none; cursor: pointer;
+        }
+        .vol-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 11px; height: 11px;
+            border-radius: 50%; background: var(--white); cursor: pointer;
+        }
+
+        .spd-sel {
+            background: rgba(18,18,20,0.95); color: var(--white);
+            border: 1px solid rgba(255,255,255,0.11);
+            padding: 3px 6px; border-radius: 4px;
+            outline: none; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 0.7rem;
+        }
+
+        /* episode strip below player */
+        .ep-strip {
+            margin-top: 12px; padding: 13px 16px;
+            background: var(--bg-card); border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 12px;
+        }
+
+        .strip-num {
+            font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--red); font-weight: 700; margin-bottom: 3px;
+        }
+
+        .strip-title { font-size: 0.91rem; font-weight: 700; line-height: 1.3; }
+
+        .next-btn {
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+            padding: 9px 15px;
+            background: var(--red); border: none; border-radius: 6px;
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: background 0.18s, transform 0.14s;
+            touch-action: manipulation;
+        }
+        .next-btn:hover, .next-btn:active { background: #c41f25; transform: translateY(-1px); }
+        .next-btn:disabled { background: var(--bg-card-hv); color: var(--grey); cursor: not-allowed; transform: none; }
+
+        /* ══════════════════════════════════
+           AUTO-NEXT OVERLAY
+        ══════════════════════════════════ */
+        .autonext {
+            position: absolute; inset: 0;
+            background: rgba(10,10,11,0.93);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.28s; z-index: 30; border-radius: 10px;
+        }
+        .autonext.show { opacity: 1; pointer-events: all; }
+
+        .an-label { font-size: 0.68rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--grey); font-weight: 600; }
+        .an-count {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 10vw, 5rem);
+            color: var(--red); line-height: 1;
+            text-shadow: 0 0 34px rgba(232,39,46,0.45);
+        }
+        .an-ep { font-size: clamp(0.85rem, 3vw, 1.05rem); font-weight: 700; text-align: center; max-width: 75%; }
+        .an-btns { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+        .an-btn {
+            padding: 9px 18px; border-radius: 6px; border: none;
+            font-family: 'DM Sans', sans-serif; font-weight: 700;
+            font-size: 0.82rem; cursor: pointer; transition: all 0.17s;
+            touch-action: manipulation;
+        }
+        .an-play { background: var(--red); color: #fff; }
+        .an-play:hover { background: #c41f25; }
+        .an-cancel { background: transparent; color: var(--grey); border: 1px solid rgba(255,255,255,0.1); }
+        .an-cancel:hover { color: var(--white); }
+
+        /* ══════════════════════════════════
+           EPISODES SIDEBAR
+        ══════════════════════════════════ */
+        .sidebar-head {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 12px;
+        }
+
+        .sidebar-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.05rem; letter-spacing: 3px; text-transform: uppercase;
+        }
+
+        .side-cnt {
+            font-size: 0.7rem; color: var(--grey);
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+            padding: 3px 10px; border-radius: 20px;
+        }
+
+        .ep-list {
+            display: flex; flex-direction: column; gap: 8px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto; padding-right: 3px;
+        }
+
+        .ep-list::-webkit-scrollbar { width: 3px; }
+        .ep-list::-webkit-scrollbar-thumb { background: var(--red-dim); }
+
+        /* ── episode card ── */
+        .ep-card {
+            display: flex; background: var(--bg-card);
+            border-radius: 7px; overflow: hidden;
+            cursor: pointer; border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease);
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        .ep-card:hover { background: var(--bg-card-hv); border-color: rgba(232,39,46,0.22); transform: translateX(-3px); }
+        .ep-card:active { background: var(--bg-card-hv); }
+        .ep-card.active { border-color: var(--red); background: rgba(232,39,46,0.04); }
+
+        .ep-card.active::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: var(--red);
+        }
+
+        .ep-thumb {
+            width: 106px; min-height: 66px; flex-shrink: 0;
+            position: relative; display: flex;
+            align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .ep-thumb-bg { position: absolute; inset: 0; }
+        .ep-ov { position: absolute; inset: 0; background: rgba(0,0,0,0.36); transition: background 0.2s; }
+        .ep-card:hover .ep-ov { background: rgba(0,0,0,0.15); }
+
+        .ep-icon {
+            position: relative; z-index: 2;
+            font-size: 1.25rem; color: rgba(255,255,255,0.78);
+            transition: color 0.2s, transform 0.2s;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .ep-card:hover .ep-icon,
+        .ep-card.active .ep-icon { color: #fff; transform: scale(1.18); text-shadow: 0 0 13px rgba(232,39,46,0.65); }
+
+        .ep-num-lbl {
+            position: absolute; top: 5px; left: 6px;
+            font-size: 0.58rem; font-weight: 700; letter-spacing: 1px;
+            color: rgba(255,255,255,0.88);
+            background: rgba(0,0,0,0.65);
+            padding: 2px 6px; border-radius: 3px; z-index: 3;
+        }
+
+        .ep-body {
+            padding: 10px 12px; flex: 1;
+            display: flex; flex-direction: column; justify-content: center; gap: 5px;
+        }
+
+        .ep-body-title { font-size: 0.83rem; font-weight: 700; line-height: 1.3; }
+
+        .ep-body-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .ep-dur { font-size: 0.68rem; color: var(--grey); }
+
+        .ep-tag {
+            font-size: 0.56rem; letter-spacing: 1.2px; text-transform: uppercase;
+            font-weight: 700; padding: 2px 6px; border-radius: 3px;
+            background: var(--red); color: #fff;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .ep-card.active .ep-tag { opacity: 1; }
+
+        /* ══════════════════════════════════
+           RESPONSIVE — TABLET
+        ══════════════════════════════════ */
+        @media (max-width: 1000px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                padding: 16px 16px 50px;
+            }
+
+            .ep-list {
+                max-height: none;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            }
+
+            /* cards slide down on tablet grid */
+            .ep-card:hover { transform: translateY(-3px) translateX(0); }
+        }
+
+        /* ══════════════════════════════════
+           RESPONSIVE — MOBILE
+        ══════════════════════════════════ */
+        @media (max-width: 600px) {
+            .navbar { padding: 10px 14px; }
+            .nav-brand { font-size: 1.15rem; letter-spacing: 2.5px; }
+            .nav-right .year-label { display: none; }
+
+            .hero { padding: 16px 14px 0; }
+            .hero-poster { width: 46px; height: 46px; }
+            .hero-title { font-size: clamp(1.6rem, 7vw, 2.2rem); }
+            .hero-desc { font-size: 0.82rem; }
+
+            .content-grid { padding: 14px 14px 50px; gap: 16px; }
+
+            /* tighter controls that fit inside the video */
+            .ctrl-overlay { padding: 36px 10px 10px; gap: 6px; }
+            .ctrl-row { gap: 4px; }
+            .ctrl-l, .ctrl-r { gap: 4px; }
+            .cbtn { font-size: 0.95rem; padding: 5px; }
+            .cbtn-play { font-size: 1.2rem; }
+            .time-txt { font-size: 0.65rem; }
+
+            /* hide volume slider and speed selector on small screens */
+            .vol-range { display: none; }
+            .spd-sel   { display: none; }
+
+            /* progress bar thicker for fingers */
+            .prog-inner { height: 5px; }
+            .prog-fill  { height: 5px; }
+
+            .ep-strip { flex-direction: column; align-items: flex-start; }
+            .next-btn { width: 100%; justify-content: center; }
+
+            /* episode list: single column full-width on mobile */
+            .ep-list { display: flex; flex-direction: column; }
+
+            .ep-card:hover { transform: none; }
+            .ep-card:active { transform: scale(0.98); }
+        }
+
+        @media (max-width: 380px) {
+            .hero-poster { width: 38px; height: 38px; }
+            .nav-brand   { font-size: 1rem; letter-spacing: 2px; }
+            .cbtn { font-size: 0.85rem; padding: 4px; }
+            .time-txt { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- ══ NAVBAR ══ -->
+    <nav class="navbar">
+        <!-- SHADOW-STREAM wordmark (logo moved to hero poster) -->
+        <div class="nav-brand">
+            <span class="shadow">SHADOW</span>
+            <span class="dash">-</span>
+            <span class="stream">STREAM</span>
+        </div>
+        <div class="nav-right">
+            <span class="year-label">2026</span>
+            <span class="nav-season">Temporada 1</span>
+        </div>
+    </nav>
+
+    <!-- ══ HERO ══ -->
+    <div class="hero">
+        <div class="hero-text">
+            <div class="hero-tags">
+                <span class="htag htag-red">Peleas</span>
+                <span class="htag htag-gold">Acción</span>
+                <span class="htag htag-grey">2026</span>
+            </div>
+            <!-- poster sits inline next to the title -->
+            <div class="hero-title-row">
+                <div class="hero-poster">
+                    <img src="imgs/logo.png" alt="La Sombra del Stream">
+                </div>
+                <h1 class="hero-title">La Sombra del Stream</h1>
+            </div>
+            <p class="hero-desc">
+                Josseferine es una streamer que transmite sus peleas en vivo, desafiando rivales de toda la red. Cada combate es una batalla por la reputación, cada golpe resuena en miles de pantallas. Pero en las sombras del servidor, alguien la observa y entrena para acabar con su racha.
+            </p>
+            <div class="hero-meta">
+                <span class="yr">2026</span>
+                <span>·</span>
+                <span>4 episodios</span>
+                <span>·</span>
+                <div class="hero-rating"><i class="fas fa-fire"></i>&nbsp;9.4</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ CONTENT GRID ══ -->
+    <div class="content-grid">
+
+        <!-- VIDEO COLUMN -->
+        <div>
+            <div class="player-label">Reproduciendo</div>
+
+            <div class="video-shell" id="videoShell">
+                <video id="vid" playsinline preload="metadata"></video>
+
+                <!-- auto-next overlay -->
+                <div class="autonext" id="autonext">
+                    <div class="an-label">Siguiente episodio en</div>
+                    <div class="an-count" id="anCount">5</div>
+                    <div class="an-ep" id="anEp"></div>
+                    <div class="an-btns">
+                        <button class="an-btn an-play" id="btnNow">
+                            <i class="fas fa-play" style="margin-right:5px"></i>Ver ahora
+                        </button>
+                        <button class="an-btn an-cancel" id="btnCancel">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- player controls -->
+                <div class="ctrl-overlay" id="ctrlOverlay">
+                    <div class="prog-track" id="progTrack">
+                        <div class="prog-inner">
+                            <div class="prog-fill" id="progFill">
+                                <div class="prog-thumb"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ctrl-row">
+                        <div class="ctrl-l">
+                            <button class="cbtn cbtn-play" id="playBtn"><i class="fas fa-play"></i></button>
+                            <button class="cbtn" id="backBtn" title="-10s"><i class="fas fa-rotate-left"></i></button>
+                            <button class="cbtn" id="fwdBtn"  title="+10s"><i class="fas fa-rotate-right"></i></button>
+                            <div class="vol-group">
+                                <button class="cbtn" id="muteBtn"><i class="fas fa-volume-up"></i></button>
+                                <input type="range" class="vol-range" id="volRange" min="0" max="1" step="0.05" value="1">
+                            </div>
+                            <span class="time-txt"><span id="curT">00:00</span> / <span id="totT">00:00</span></span>
+                        </div>
+                        <div class="ctrl-r">
+                            <select class="spd-sel" id="spdSel">
+                                <option value="0.5">0.5×</option>
+                                <option value="1" selected>1×</option>
+                                <option value="1.5">1.5×</option>
+                                <option value="2">2×</option>
+                            </select>
+                            <button class="cbtn" id="fsBtn"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- strip -->
+            <div class="ep-strip">
+                <div>
+                    <div class="strip-num" id="sNum">EP 01</div>
+                    <div class="strip-title" id="sTitle">—</div>
+                </div>
+                <button class="next-btn" id="nextBtn">
+                    Siguiente&nbsp;<i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SIDEBAR EPISODES -->
+        <div>
+            <div class="sidebar-head">
+                <div class="sidebar-title">Episodios</div>
+                <div class="side-cnt" id="sideCnt">1 / 4</div>
+            </div>
+            <div class="ep-list" id="epList"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/* ── DATA ── */
+const eps = [
+    { id:1, num:"EP 01", title:"Primera Transmisión",
+      dur:"24:10",
+      src:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+      bg:"linear-gradient(135deg,#1a0000,#5a0a0a 60%,#2a0505)" },
+    { id:2, num:"EP 02", title:"El Rival en la Sombra",
+      dur:"23:45",
+      src:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      bg:"linear-gradient(135deg,#0a0a1a,#1a1a4a 60%,#0a0a2a)" },
+    { id:3, num:"EP 03", title:"Josseferine vs. El Sistema",
+      dur:"25:02",
+      src:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+      bg:"linear-gradient(135deg,#1a1000,#4a3000 60%,#2a1a00)" },
+    { id:4, num:"EP 04", title:"El Último Round",
+      dur:"24:50",
+      src:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      bg:"linear-gradient(135deg,#0a001a,#2a0050 60%,#1a0030)" },
+];
+
+/* ── REFS ── */
+const vid        = document.getElementById('vid');
+const shell      = document.getElementById('videoShell');
+const ctrl       = document.getElementById('ctrlOverlay');
+const playBtn    = document.getElementById('playBtn');
+const backBtn    = document.getElementById('backBtn');
+const fwdBtn     = document.getElementById('fwdBtn');
+const muteBtn    = document.getElementById('muteBtn');
+const volRange   = document.getElementById('volRange');
+const spdSel     = document.getElementById('spdSel');
+const fsBtn      = document.getElementById('fsBtn');
+const progTrack  = document.getElementById('progTrack');
+const progFill   = document.getElementById('progFill');
+const curT       = document.getElementById('curT');
+const totT       = document.getElementById('totT');
+const sNum       = document.getElementById('sNum');
+const sTitle     = document.getElementById('sTitle');
+const nextBtn    = document.getElementById('nextBtn');
+const sideCnt    = document.getElementById('sideCnt');
+const epList     = document.getElementById('epList');
+const autonext   = document.getElementById('autonext');
+const anCount    = document.getElementById('anCount');
+const anEp       = document.getElementById('anEp');
+const btnNow     = document.getElementById('btnNow');
+const btnCancel  = document.getElementById('btnCancel');
+
+let curId = 1, anTimer = null, anSec = 5, hideTimer = null;
+
+/* ── CONTROLS VISIBILITY (mouse + touch) ── */
+function showCtrl() {
+    ctrl.classList.remove('hidden');
+    shell.classList.remove('cursor-hidden');
+    clearTimeout(hideTimer);
+}
+function hideCtrl() {
+    ctrl.classList.add('hidden');
+    shell.classList.add('cursor-hidden');
+}
+
+function schedHide() {
+    clearTimeout(hideTimer);
+    if (!vid.paused) hideTimer = setTimeout(hideCtrl, 2800);
+}
+
+shell.addEventListener('mousemove', () => { showCtrl(); schedHide(); });
+shell.addEventListener('mouseleave', () => {
+    if (!vid.paused) { clearTimeout(hideTimer); hideTimer = setTimeout(hideCtrl, 700); }
+});
+
+/* Touch: tap video to toggle controls (not play/pause) */
+let touchMoved = false;
+shell.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
+shell.addEventListener('touchmove',  () => { touchMoved = true; },  { passive: true });
+shell.addEventListener('touchend', (e) => {
+    if (touchMoved) return;
+    // If tap is on a button child, let button handle it
+    if (e.target.closest('button, .prog-track, select')) return;
+    if (ctrl.classList.contains('hidden')) {
+        showCtrl();
+        schedHide();
+    } else {
+        togglePlay();
+    }
+});
+
+vid.addEventListener('pause', () => { showCtrl(); clearTimeout(hideTimer); });
+vid.addEventListener('play',  schedHide);
+
+/* ── UTILS ── */
+function fmt(t) {
+    if (isNaN(t)) return '00:00';
+    return String(Math.floor(t/60)).padStart(2,'0') + ':' + String(Math.floor(t%60)).padStart(2,'0');
+}
+function getEp(id) { return eps.find(e => e.id === id); }
+function nxtEp()   { return eps.find(e => e.id === curId + 1) || null; }
+
+/* ── PLAY / PAUSE ── */
+function togglePlay() {
+    if (vid.paused) {
+        vid.play();
+        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        schedHide();
+    } else {
+        vid.pause();
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        showCtrl();
+    }
+}
+
+vid.addEventListener('click', (e) => {
+    /* on desktop, clicking video toggles play */
+    if (window.matchMedia('(pointer: fine)').matches) togglePlay();
+});
+
+playBtn.addEventListener('click', togglePlay);
+backBtn.addEventListener('click', () => { vid.currentTime -= 10; showCtrl(); schedHide(); });
+fwdBtn.addEventListener('click',  () => { vid.currentTime += 10; showCtrl(); schedHide(); });
+
+/* ── PROGRESS ── */
+vid.addEventListener('timeupdate', () => {
+    const p = (vid.currentTime / vid.duration) * 100 || 0;
+    progFill.style.width = p + '%';
+    curT.textContent = fmt(vid.currentTime);
+});
+vid.addEventListener('loadedmetadata', () => { totT.textContent = fmt(vid.duration); });
+
+function seekFromEvent(e) {
+    const rect = progTrack.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    vid.currentTime = Math.max(0, Math.min(1, x / rect.width)) * vid.duration;
+    showCtrl(); schedHide();
+}
+
+progTrack.addEventListener('click', seekFromEvent);
+
+/* Touch scrubbing */
+let scrubbing = false;
+progTrack.addEventListener('touchstart', (e) => { scrubbing = true; seekFromEvent(e); e.stopPropagation(); }, { passive: true });
+progTrack.addEventListener('touchmove',  (e) => { if (scrubbing) { seekFromEvent(e); e.preventDefault(); } }, { passive: false });
+progTrack.addEventListener('touchend',   ()  => { scrubbing = false; });
+
+/* ── VOLUME ── */
+volRange.addEventListener('input', e => { vid.volume = +e.target.value; updVol(); });
+
+function updVol() {
+    const i = muteBtn.querySelector('i');
+    if (vid.muted || vid.volume === 0) i.className = 'fas fa-volume-xmark';
+    else if (vid.volume < 0.5)         i.className = 'fas fa-volume-low';
+    else                                i.className = 'fas fa-volume-up';
+}
+
+muteBtn.addEventListener('click', () => {
+    vid.muted = !vid.muted;
+    volRange.value = vid.muted ? 0 : vid.volume;
+    updVol();
+});
+
+/* ── SPEED / FULLSCREEN ── */
+spdSel.addEventListener('change', e => { vid.playbackRate = +e.target.value; });
+
+fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        (shell.requestFullscreen || shell.webkitRequestFullscreen).call(shell);
+        fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+    } else {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+    }
+});
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown', e => {
+    if (['INPUT','SELECT'].includes(e.target.tagName)) return;
+    if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
+    if (e.code === 'ArrowRight') { vid.currentTime += 10; showCtrl(); schedHide(); }
+    if (e.code === 'ArrowLeft')  { vid.currentTime -= 10; showCtrl(); schedHide(); }
+    if (e.code === 'KeyM') muteBtn.click();
+    if (e.code === 'KeyF') fsBtn.click();
+});
+
+/* ── AUTO-NEXT ── */
+vid.addEventListener('ended', () => { const n = nxtEp(); if (n) startAuto(n); });
+
+function startAuto(ep) {
+    anSec = 5; anCount.textContent = anSec;
+    anEp.textContent = ep.title;
+    autonext.classList.add('show');
+    anTimer = setInterval(() => {
+        anSec--; anCount.textContent = anSec;
+        if (anSec <= 0) { clearInterval(anTimer); autonext.classList.remove('show'); selEp(ep.id, true); }
+    }, 1000);
+}
+
+function cancelAuto() { clearInterval(anTimer); autonext.classList.remove('show'); }
+
+btnNow.addEventListener('click', () => {
+    clearInterval(anTimer); autonext.classList.remove('show');
+    const n = nxtEp(); if (n) selEp(n.id, true);
+});
+btnCancel.addEventListener('click', cancelAuto);
+nextBtn.addEventListener('click', () => { const n = nxtEp(); if (n) selEp(n.id, true); });
+
+/* ── SELECT EPISODE ── */
+function selEp(id, auto = false) {
+    if (id === curId && !auto) return;
+    cancelAuto();
+    const ep = getEp(id); if (!ep) return;
+    curId = id;
+    vid.src = ep.src; vid.load();
+
+    sNum.textContent  = ep.num;
+    sTitle.textContent = ep.title;
+    sideCnt.textContent = `${id} / ${eps.length}`;
+    nextBtn.disabled = !nxtEp();
+
+    progFill.style.width = '0%';
+    curT.textContent = '00:00'; totT.textContent = '00:00';
+    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+
+    shell.style.transition = 'opacity 0.28s';
+    shell.style.opacity = '0.5';
+    setTimeout(() => { shell.style.opacity = '1'; }, 280);
+
+    if (auto) {
+        vid.play().then(() => {
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            schedHide();
+        }).catch(() => {});
+    } else {
+        showCtrl();
+    }
+
+    renderEps();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── RENDER EPISODES ── */
+function renderEps() {
+    epList.innerHTML = '';
+    eps.forEach((ep, i) => {
+        const active = ep.id === curId;
+        const c = document.createElement('div');
+        c.className = 'ep-card' + (active ? ' active' : '');
+        c.innerHTML = `
+            <div class="ep-thumb">
+                <div class="ep-thumb-bg" style="background:${ep.bg}"></div>
+                <div class="ep-ov"></div>
+                <span class="ep-num-lbl">${ep.num}</span>
+                <i class="ep-icon ${active ? 'fas fa-pause-circle' : 'fas fa-play-circle'}"></i>
+            </div>
+            <div class="ep-body">
+                <div class="ep-body-title">${ep.title}</div>
+                <div class="ep-body-meta">
+                    <span class="ep-dur"><i class="far fa-clock" style="opacity:.5;margin-right:4px"></i>${ep.dur}</span>
+                    <span class="ep-tag">▶ Viendo</span>
+                </div>
+            </div>`;
+
+        c.addEventListener('click', () => selEp(ep.id));
+
+        /* staggered entrance */
+        c.style.cssText += `opacity:0;transform:translateX(8px);
+            transition:opacity .28s ${i*.065}s ease,
+                       transform .28s ${i*.065}s ease,
+                       background .2s, border-color .2s, transform .2s var(--ease);`;
+        requestAnimationFrame(() => { c.style.opacity = '1'; c.style.transform = 'translateX(0)'; });
+
+        epList.appendChild(c);
+    });
+}
+
+/* ── INIT ── */
+(function() {
+    const ep = getEp(curId);
+    vid.src = ep.src;
+    sNum.textContent  = ep.num;
+    sTitle.textContent = ep.title;
+    nextBtn.disabled = !nxtEp();
+    renderEps();
+})();
+</script>
+</body>
+</html>
